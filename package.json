@@ -1,0 +1,15 @@
+{
+  "name": "ai-class-system",
+  "version": "1.0.0",
+  "description": "课堂阅读推荐与协同过滤演示系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "reset": "node reset.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.8.3",
+    "xlsx": "^0.18.5"
+  }
+}

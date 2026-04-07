@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI青少年图书推荐系统 - 教师端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2d8cf0;
+            margin-bottom: 10px;
+        }
+        .desc {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .tab-container {
+            margin-bottom: 30px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: 1px solid #e8f3ff;
+            border-radius: 25px;
+            background: white;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #2d8cf0;
+            color: white;
+            border-color: #2d8cf0;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .tip {
+            background: #e8f3ff;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #2d8cf0;
+        }
+        .task-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .task-toggle label {
+            font-weight: 500;
+            min-width: 120px;
+        }
+        .task-stats {
+            flex: 1;
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 500;
+        }
+        .task-stats strong {
+            color: #059669;
+            font-size: 16px;
+        }
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #2d8cf0;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-box h2 {
+            color: #2d8cf0;
+            margin-bottom: 10px;
+        }
+        .login-box p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .login-input:focus {
+            border-color: #2d8cf0;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: #2d8cf0;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-btn:hover {
+            background: #1d7bd9;
+        }
+        .login-error {
+            color: #ef4444;
+            margin-top: 15px;
+            display: none;
+        }
+        .seat-map-container { overflow-x: auto; }
+
+        .seat-map {
+            display: grid;
+            grid-template-columns: 62px repeat(8, minmax(88px, 1fr));
+            gap: 10px;
+            min-width: 980px;
+            margin-bottom: 12px;
+        }
+
+        .row-label {
+            background: #eef4fb;
+            color: #4b5563;
+            border: 1px solid #d8e4f1;
+            border-radius: 12px;
+            min-height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .seat {
+            padding: 12px 8px;
+            min-height: 82px;
+            border-radius: 16px;
+            border: 1.5px solid #d9e6f3;
+            cursor: pointer;
+            transition: 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(31, 41, 55, 0.04);
+            background: #fff;
+        }
+
+        .seat:hover:not(.submitted) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(59, 130, 246, 0.14);
+        }
+
+        .seat.g1 {
+            background: linear-gradient(180deg, #ffffff 0%, #f1f6ff 100%);
+            border-color: #cfe0ff;
+        }
+
+        .seat.g2 {
+            background: linear-gradient(180deg, #ffffff 0%, #eefbf7 100%);
+            border-color: #c6ede4;
+        }
+
+        .seat.g3 {
+            background: linear-gradient(180deg, #ffffff 0%, #fff6ea 100%);
+            border-color: #f7dfb5;
+        }
+
+        .seat.checked-in {
+            background: linear-gradient(135deg, #16a34a, #22c55e) !important;
+            color: white;
+            border-color: #16a34a;
+            box-shadow: 0 12px 22px rgba(22, 163, 74, 0.24);
+        }
+
+        .seat.checked-in::after {
+            content: "已签到";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 10px;
+            background: rgba(255,255,255,0.16);
+            padding: 2px 6px;
+            border-radius: 999px;
+        }
+
+        .corridor-right {
+            margin-right: 18px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .student-list {
+            margin-top: 20px;
+        }
+        .student-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .student-item:hover {
+            background: #f0f9ff;
+            border-color: #2d8cf0;
+        }
+        .student-info {
+            flex: 1;
+        }
+        .student-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: #2d8cf0;
+            color: white;
+        }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #333;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .add-student-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .add-student-form input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        .submission-list {
+            margin-top: 20px;
+        }
+        .submission-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .submission-item:hover {
+            background: #f0f9ff;
+            border-color: #2d8cf0;
+        }
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .submission-student {
+            font-weight: 500;
+        }
+        .submission-time {
+            font-size: 12px;
+            color: #666;
+        }
+        .submission-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .chip {
+            padding: 6px 12px;
+            background: #e8f3ff;
+            border-radius: 16px;
+            font-size: 12px;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .radar-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="teacherLogin" class="login-overlay">
+        <div class="login-box">
+            <h2>🔐 教师身份验证</h2>
+            <p>请输入教师密码以进入管理后台</p>
+            <input type="password" id="teacherPassword" class="login-input" placeholder="请输入密码" onkeypress="if(event.key==='Enter')checkTeacherPassword()">
+            <button class="login-btn" onclick="checkTeacherPassword()">进入教师端</button>
+            <div id="loginError" class="login-error">密码错误，请重新输入</div>
+        </div>
+    </div>
+
+    <div id="teacherContent" class="container" style="display: none;">
+        <h1>👨‍🏫 AI青少年图书推荐系统 - 教师端</h1>
+        <p class="desc">管理任务、查看学生提交情况和座位签到状态</p>
+
+        <!-- 标签页 -->
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="task-management">📋 任务管理</button>
+                <button class="tab-btn" data-tab="seat-status">💺 座位签到</button>
+                <button class="tab-btn" data-tab="student-management">👥 学生管理</button>
+                <button class="tab-btn" data-tab="submissions">📊 提交记录</button>
+                <button class="tab-btn" data-tab="design-plaza">🏛️ 方案广场</button>
+            </div>
+
+            <!-- 任务管理标签页 -->
+            <div class="tab-content active" id="task-management">
+                <div class="card">
+                    <h3>📋 任务管理</h3>
+                    <div class="tip">点击开关按钮控制任务的下发状态，实时查看提交进度</div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="btn btn-danger" onclick="clearAllCheckins()" style="flex: 1;">🔄 清除所有签到学生（下一个班级）</button>
+                    </div>
+                    
+                    <div class="task-toggle">
+                        <label for="task1-toggle">任务一：书籍选择</label>
+                        <span class="task-stats" id="task1-stats">✅ 已提交: <strong>0</strong> 人</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="task1-toggle" onchange="toggleTask('task1', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="task-toggle">
+                        <label for="task2-toggle">任务二：书籍推荐</label>
+                        <span class="task-stats" id="task2-stats">✅ 已提交: <strong>0</strong> 人</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="task2-toggle" onchange="toggleTask('task2', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="task-toggle">
+                        <label for="task3-toggle">任务三：阅读反馈</label>
+                        <span class="task-stats" id="task3-stats">✅ 已提交: <strong>0</strong> 人</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="task3-toggle" onchange="toggleTask('task3', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div style="border-top: 2px solid #e2e8f0; margin: 20px 0; padding-top: 20px;">
+                        <h4 style="margin-bottom: 15px; color: #374151;">🏛️ 课堂互动功能</h4>
+                    </div>
+                    
+                    <div class="task-toggle">
+                        <label for="designPlaza-toggle">班级方案广场</label>
+                        <span class="task-stats" id="designPlaza-stats" style="color: #7c3aed;">
+                            🔥 <strong>开放</strong>后，所有同学可以互相浏览方案并点赞
+                        </span>
+                        <label class="toggle">
+                            <input type="checkbox" id="designPlaza-toggle" onchange="toggleTask('designPlaza', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 座位签到标签页 -->
+            <div class="tab-content" id="seat-status">
+                <div class="card">
+                    <h3>💺 座位签到状态</h3>
+                    <div class="tip">显示学生的座位签到情况，点击座位查看学生详情</div>
+                    <div class="seat-map-container" id="seatMap"></div>
+                </div>
+            </div>
+
+            <!-- 学生管理标签页 -->
+            <div class="tab-content" id="student-management">
+                <div class="card">
+                    <h3>👥 学生管理</h3>
+                    <div class="tip">添加、编辑和删除学生信息，点击学生查看详情</div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="btn btn-danger" id="clear-students-btn" style="flex: 1;">🗑️ 一键删除所有学生</button>
+                    </div>
+                    
+                    <div class="add-student-form">
+                        <input type="text" id="student-id" placeholder="学号">
+                        <input type="text" id="student-name" placeholder="姓名">
+                        <button class="btn btn-primary" onclick="addStudent()">添加学生</button>
+                    </div>
+                    
+                    <div class="student-list" id="studentList"></div>
+                </div>
+            </div>
+
+            <!-- 提交记录标签页 -->
+            <div class="tab-content" id="submissions">
+                <div class="card">
+                    <h3>📊 学生提交记录</h3>
+                    <div class="tip">查看学生的任务提交情况，点击记录查看学生详情</div>
+                    <div class="submission-list" id="submissionList"></div>
+                </div>
+            </div>
+
+            <!-- 方案广场标签页 -->
+            <div class="tab-content" id="design-plaza">
+                <div class="card">
+                    <h3>🏛️ 班级方案广场管理</h3>
+                    <div class="tip">查看学生发布的推荐系统设计方案，按点赞数排序</div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <div style="flex: 1; background: #ecfdf5; padding: 12px; border-radius: 10px;">
+                            <strong>📊 方案统计</strong>
+                            <span id="design-stats" style="margin-left: 10px; color: #059669;">
+                                已发布: <strong>0</strong> 个方案
+                            </span>
+                        </div>
+                        <button class="btn btn-danger" onclick="clearAllDesigns()">🗑️ 清空所有方案</button>
+                    </div>
+                    
+                    <div id="designList" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                        <div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 60px;">
+                            还没有学生发布方案
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 学生详情模态框 -->
+    <div class="modal" id="studentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">学生详情</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // 兴趣配置
+        const INTEREST_CONFIG = {
+            "🔬 科学探索": { color: "#2563eb", short: "科学" },
+            "💻 编程科技": { color: "#059669", short: "科技" },
+            "📖 文学故事": { color: "#7c3aed", short: "文学" },
+            "🏛 历史人文": { color: "#d97706", short: "历史" },
+            "🎨 艺术审美": { color: "#db2777", short: "艺术" },
+            "🌱 生活成长": { color: "#0891b2", short: "成长" }
+        };
+        const INTEREST_KEYS = Object.keys(INTEREST_CONFIG);
+
+        // 任务状态
+        let taskStatus = {
+            task1: true,
+            task2: false,
+            task3: false
+        };
+
+        // 学生数据
+        let students = [];
+
+        // 提交记录
+        let submissions = [];
+        let BOOKS = [];
+
+        async function loadBooks() {
+            try {
+                const res = await fetch('/books.json');
+                BOOKS = await res.json();
+            } catch (e) {
+                console.error('加载书籍数据失败');
+            }
+        }
+
+        function getBookTitleById(bookId) {
+            const book = BOOKS.find(b => b.id === bookId);
+            return book ? book.title : bookId;
+        }
+
+        // 初始化
+        async function init() {
+            await loadBooks();
+            loadTaskStatus();
+            loadStudentAttendance();
+            renderSeats();
+            renderStudents();
+            loadSubmissions();
+            
+            const socket = io();
+            socket.on('submissions', (newSubmissions) => {
+                console.log('收到学生签到:', newSubmissions.length, '人');
+                submissions = newSubmissions;
+                students = submissions.map(submission => {
+                    let tasksCompleted = 0;
+                    if (submission.selectedBookIds && submission.selectedBookIds.length > 0) tasksCompleted++;
+                    return {
+                        id: submission.studentId,
+                        name: submission.studentName,
+                        row: submission.seat.row,
+                        col: submission.seat.col,
+                        seat: `${submission.seat.row}-${submission.seat.col}`,
+                        progress: submission.progress || 0,
+                        tasksCompleted: tasksCompleted,
+                        totalTasks: 3
+                    };
+                });
+                renderSeats();
+                renderStudents();
+                renderSubmissions();
+                updateTaskStats();
+            });
+            socket.on('designs', (designs) => {
+                console.log('收到方案更新:', designs.length, '个方案');
+                renderDesigns(designs);
+            });
+            socket.on('taskStatus', (status) => {
+                taskStatus = status;
+                updateTaskToggles();
+            });
+        }
+
+        // 全局事件委托 - 解决隐藏标签页元素不存在的问题（100%可靠）
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'clear-students-btn') {
+                clearAllCheckins();
+            }
+        });
+
+        // 加载任务状态
+        function loadTaskStatus() {
+            fetch('/api/task-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status) {
+                        taskStatus = data.status;
+                        updateTaskToggles();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading task status:', error);
+                });
+        }
+
+        // 加载学生签到信息
+        function loadStudentAttendance() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.submissions) {
+                        students = data.submissions.map(submission => {
+                            let tasksCompleted = 0;
+                            if (submission.selectedBookIds && submission.selectedBookIds.length > 0) tasksCompleted++;
+                            return {
+                                id: submission.studentId,
+                                name: submission.studentName,
+                                row: submission.seat.row,
+                                col: submission.seat.col,
+                                seat: `${submission.seat.row}-${submission.seat.col}`,
+                                progress: submission.progress || 0,
+                                tasksCompleted: tasksCompleted,
+                                totalTasks: 3
+                            };
+                        });
+                        renderSeats();
+                        renderStudents();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading student attendance:', error);
+                });
+        }
+
+        // 更新任务开关状态
+        function updateTaskToggles() {
+            document.getElementById('task1-toggle').checked = taskStatus.task1;
+            document.getElementById('task2-toggle').checked = taskStatus.task2;
+            document.getElementById('task3-toggle').checked = taskStatus.task3;
+            document.getElementById('designPlaza-toggle').checked = taskStatus.designPlaza;
+            
+            const stats = document.getElementById('designPlaza-stats');
+            if (taskStatus.designPlaza) {
+                stats.innerHTML = '🔥 <strong style="color: #059669;">已开放</strong> - 全班可见并可点赞';
+            } else {
+                stats.innerHTML = '🔒 <strong style="color: #9ca3af;">未开放</strong> - 仅教师可见';
+            }
+        }
+
+        // 切换任务状态
+        function toggleTask(taskId, active) {
+            const newStatus = {
+                ...taskStatus,
+                [taskId]: active
+            };
+
+            fetch('/api/task-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newStatus)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    taskStatus = data.status;
+                    alert('任务状态已更新');
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling task:', error);
+                alert('更新任务状态失败');
+            });
+        }
+
+        // 座位数据
+        const SEATS = [];
+        for (let row = 1; row <= 6; row++) {
+            for (let col = 1; col <= 8; col++) {
+                const seatNum = (row - 1) * 8 + col;
+                SEATS.push({
+                    id: seatNum.toString().padStart(2, "0"),
+                    row,
+                    col,
+                    label: `${row}排${col}座`
+                });
+            }
+        }
+
+        // 获取座位分组类
+        function getSeatGroupClass(col) {
+            if (col <= 2) return "g1";
+            if (col <= 6) return "g2";
+            return "g3";
+        }
+
+        // 获取走廊类
+        function getCorridorClass(col) {
+            return (col === 2 || col === 6) ? "corridor-right" : "";
+        }
+
+        // 渲染座位
+        function renderSeats() {
+            const seatMap = document.getElementById('seatMap');
+            if (!seatMap) return;
+
+            let html = '<div class="seat-map"><div class="row-label"></div>';
+            for (let c = 1; c <= 8; c++) {
+                html += `<div class="row-label ${getCorridorClass(c)}">${c}列</div>`;
+            }
+            html += "</div>";
+
+            for (let r = 1; r <= 6; r++) {
+                html += '<div class="seat-map">';
+                html += `<div class="row-label">${r}排</div>`;
+                SEATS.filter(s => s.row === r).forEach(seat => {
+                    const student = students.find(s => s.row === seat.row && s.col === seat.col);
+                    const isCheckedIn = !!student;
+                    const progress = student ? student.progress : 0;
+                    html += `
+                        <div class="seat ${getSeatGroupClass(seat.col)} ${getCorridorClass(seat.col)} ${isCheckedIn ? "checked-in" : ""}"
+                             onclick="${isCheckedIn ? `showStudentDetailsById('${student.id}')` : ""}">
+                            <div style="font-size:15px;font-weight:800;">${isCheckedIn ? student.name : seat.id}</div>
+                            <div style="font-size:11px;opacity:.9;">${isCheckedIn ? student.id : seat.label}</div>
+                            ${isCheckedIn ? `
+                                <div style="font-size:10px;opacity:.8;margin-top:2px;">
+                                    <span style="background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:8px;font-weight:600;">
+                                        ${student.tasksCompleted}/${student.totalTasks}
+                                    </span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                html += "</div>";
+            }
+
+            seatMap.innerHTML = html;
+        }
+
+        // 渲染学生列表
+        function renderStudents() {
+            const studentList = document.getElementById('studentList');
+            studentList.innerHTML = '';
+            students.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div class="student-info">
+                        <div><strong>${student.name}</strong></div>
+                        <div style="font-size: 12px; color: #666;">学号: ${student.id} | 座位: ${student.seat}</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                            任务进度: 
+                            <span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:10px;font-weight:600;">
+                                ${student.tasksCompleted}/${student.totalTasks}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="student-actions">
+                        <button class="btn btn-secondary" onclick="editStudent('${student.id}')">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteStudent('${student.id}')">删除</button>
+                    </div>
+                `;
+                item.onclick = (e) => {
+                    if (!e.target.closest('.student-actions')) {
+                        showStudentDetails(student);
+                    }
+                };
+                studentList.appendChild(item);
+            });
+        }
+
+        // 添加学生
+        function addStudent() {
+            const id = document.getElementById('student-id').value;
+            const name = document.getElementById('student-name').value;
+            
+            if (!id || !name) {
+                alert('请输入学号和姓名');
+                return;
+            }
+            
+            // 检查学号是否已存在
+            if (students.some(s => s.id === id)) {
+                alert('该学号已存在');
+                return;
+            }
+            
+            // 分配座位
+            const seat = (students.length + 1).toString();
+            
+            students.push({ id, name, seat });
+            renderStudents();
+            renderSeats();
+            
+            // 清空输入框
+            document.getElementById('student-id').value = '';
+            document.getElementById('student-name').value = '';
+        }
+
+        // 编辑学生
+        function editStudent(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            
+            const newName = prompt('请输入新的姓名:', student.name);
+            if (newName) {
+                student.name = newName;
+                renderStudents();
+                renderSeats();
+            }
+        }
+
+        // 删除学生
+        function deleteStudent(id) {
+            if (confirm('确定要删除该学生吗？')) {
+                students = students.filter(s => s.id !== id);
+                renderStudents();
+                renderSeats();
+            }
+        }
+
+        // 清除所有签到学生（下一个班级）
+        function clearAllCheckins() {
+            if (confirm('⚠️ 确定要清除所有签到学生吗？\n\n这将清空当前班级的所有签到和提交记录，为下一个班级做准备。')) {
+                fetch('/api/clear-checkins', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            submissions = [];
+                            students = [];
+                            renderSeats();
+                            renderStudents();
+                            renderSubmissions();
+                            updateTaskStats();
+                            alert('✅ 已清除所有签到学生！\n\n下一个班级可以开始签到了。');
+                        }
+                    });
+            }
+        }
+
+        // 渲染方案列表
+        function renderDesigns(designs) {
+            const designList = document.getElementById('designList');
+            const statsSpan = document.querySelector('#design-stats strong');
+            
+            if (statsSpan) statsSpan.textContent = designs.length || 0;
+            
+            if (!designs || designs.length === 0) {
+                designList.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 60px;">
+                        还没有学生发布方案
+                    </div>
+                `;
+                return;
+            }
+
+            designs.sort((a, b) => b.likes - a.likes);
+            
+            designList.innerHTML = designs.map(d => `
+                <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 16px; color: #1e293b;">${d.studentName}</div>
+                            <div style="font-size: 12px; color: #94a3b8;">${d.scene} | ${d.time || ''}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div style="background: #fef2f2; border-radius: 20px; padding: 6px 14px; font-size: 14px;">
+                                ❤️ ${d.likes || 0} 赞
+                            </div>
+                            <button onclick="deleteDesign('${d.id}', '${d.studentName}')" style="
+                                background: #fee2e2;
+                                color: #dc2626;
+                                border: none;
+                                border-radius: 8px;
+                                padding: 6px 12px;
+                                cursor: pointer;
+                                font-size: 12px;
+                                font-weight: 600;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+                                🗑️ 删除
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+                        ${d.algorithms.map(a => `<span style="background: #dbeafe; color: #1d4ed8; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;">${a}</span>`).join("")}
+                    </div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+                        ${d.data.map(x => `<span style="background: #f3e8ff; color: #7c3aed; padding: 3px 10px; border-radius: 12px; font-size: 11px;">${x}</span>`).join("")}
+                    </div>
+                    
+                    <div style="font-size: 13px; line-height: 1.6; color: #475569; background: #f8fafc; padding: 10px 12px; border-radius: 8px;">
+                        ${d.logic}
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // 清空所有方案
+        function clearAllDesigns() {
+            if (confirm('⚠️ 确定要清空所有方案吗？')) {
+                fetch('/api/clear-checkins', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('✅ 已清空所有方案！');
+                        }
+                    });
+            }
+        }
+
+        function deleteDesign(designId, studentName) {
+            if (!confirm(`确定要删除「${studentName}」的方案吗？\n\n删除后所有学生端将立即同步移除！`)) {
+                return;
+            }
+            
+            fetch("/api/designs/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ designId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("✅ 方案已删除！");
+                }
+            });
+        }
+
+        // 加载提交记录
+        function updateTaskStats() {
+            const task1Count = submissions.filter(s => s.selectedBookIds && s.selectedBookIds.length > 0).length;
+            const task2Count = submissions.filter(s => s.recommendedBookIds && s.recommendedBookIds.length > 0).length;
+            const task3Count = submissions.filter(s => s.feedback && s.feedback.length > 0).length;
+            
+            const task1Stats = document.querySelector('#task1-stats strong');
+            const task2Stats = document.querySelector('#task2-stats strong');
+            const task3Stats = document.querySelector('#task3-stats strong');
+            
+            if (task1Stats) task1Stats.textContent = task1Count;
+            if (task2Stats) task2Stats.textContent = task2Count;
+            if (task3Stats) task3Stats.textContent = task3Count;
+        }
+
+        function loadSubmissions() {
+            fetch('/api/submissions')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.submissions) {
+                        submissions = data.submissions;
+                        renderSubmissions();
+                        updateTaskStats();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading submissions:', error);
+                });
+        }
+
+        // 渲染提交记录
+        function renderSubmissions() {
+            const submissionList = document.getElementById('submissionList');
+            submissionList.innerHTML = '';
+            
+            if (submissions.length === 0) {
+                submissionList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">暂无提交记录</div>';
+                return;
+            }
+            
+            submissions.forEach(submission => {
+                const item = document.createElement('div');
+                item.className = 'submission-item';
+                
+                const timeStr = submission.time || '未知时间';
+                
+                let contentHtml = '';
+                if (submission.selectedBookIds && submission.selectedBookIds.length > 0) {
+                    const bookTitles = submission.selectedBookIds.map(id => getBookTitleById(id));
+                    contentHtml = `
+                        <div class="submission-content">
+                            <h4>选择书籍 (${bookTitles.length}本)</h4>
+                            <div class="chips">
+                                ${bookTitles.map(title => `<span class="chip">${title}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                } else if (submission.interests) {
+                    contentHtml = `
+                        <div class="submission-content">
+                            <h4>兴趣选择</h4>
+                            <div class="chips">
+                                ${submission.interests.map(interest => `<span class="chip">${interest}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                item.innerHTML = `
+                    <div class="submission-header">
+                        <div class="submission-student">学生: ${submission.studentName || '未知'} (${submission.studentId || '未知'})</div>
+                        <div class="submission-time">提交时间: ${timeStr}</div>
+                    </div>
+                    <div>座位: ${submission.seat ? `${submission.seat.row}-${submission.seat.col}` : '未知'}</div>
+                    ${contentHtml}
+                `;
+                
+                // 查找学生信息
+                const student = students.find(s => s.id === submission.studentId);
+                if (student) {
+                    item.onclick = () => showStudentDetails(student);
+                }
+                
+                submissionList.appendChild(item);
+            });
+        }
+
+        // 标签页切换
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                
+                // 切换标签页
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName).classList.add('active');
+                
+                // 切换按钮状态
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 刷新数据
+                if (tabName === 'seat-status') {
+                    renderSeats();
+                } else if (tabName === 'student-management') {
+                    renderStudents();
+                } else if (tabName === 'submissions') {
+                    loadSubmissions();
+                }
+            });
+        });
+
+        // 绘制雷达图
+        function drawRadar(interests, size = 200) {
+            const cx = size / 2;
+            const cy = size / 2;
+            const r = size * 0.35;
+            const n = INTEREST_KEYS.length;
+
+            const getPt = (i, rad) => ({
+                x: cx + rad * Math.cos(Math.PI * 2 * i / n - Math.PI / 2),
+                y: cy + rad * Math.sin(Math.PI * 2 * i / n - Math.PI / 2)
+            });
+
+            // 绘制 5 层背景网格
+            let grids = "";
+            [0.2, 0.4, 0.6, 0.8, 1].forEach(m => {
+                const pts = INTEREST_KEYS.map((_, i) => getPt(i, r * m));
+                const d = pts.map((p, i) => (i === 0 ? "M" : "L") + p.x + "," + p.y).join(" ") + "Z";
+                grids += `<path d="${d}" fill="none" stroke="#e2e8f0" stroke-width="1" />`;
+            });
+
+            // 绘制坐标轴线
+            INTEREST_KEYS.forEach((_, i) => {
+                const p = getPt(i, r);
+                grids += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="#e2e8f0" stroke-width="1" />`;
+            });
+
+            // 数据路径
+            const dataPts = INTEREST_KEYS.map((k, i) => getPt(i, r * (interests.includes(k) ? 1 : 0.15)));
+            const dataPath = dataPts.map((p, i) => (i === 0 ? "M" : "L") + p.x + "," + p.y).join(" ") + "Z";
+
+            // 标签和数据点
+            let labels = "";
+            INTEREST_KEYS.forEach((k, i) => {
+                const p = getPt(i, r * 1.25);
+                const active = interests.includes(k);
+                labels += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="middle" 
+                            font-family="sans-serif" font-size="12" 
+                            font-weight="${active ? 700 : 400}" 
+                            fill="${active ? INTEREST_CONFIG[k].color : '#94a3b8'}"> 
+                            ${INTEREST_CONFIG[k].short} 
+                          </text>`;
+                if (active) {
+                    const dp = getPt(i, r);
+                    labels += `<circle cx="${dp.x}" cy="${dp.y}" r="4" fill="${INTEREST_CONFIG[k].color}" stroke="white" stroke-width="2" />`;
+                }
+            });
+
+            return `<svg width="${size}" height="${size}" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));"> 
+                <g>${grids}</g> 
+                <path d="${dataPath}" 
+                      style="transition: d 0.6s ease; fill: rgba(37, 99, 235, 0.15); stroke: #2563eb; stroke-width: 2.5; stroke-linejoin: round;" /> 
+                <g>${labels}</g> 
+            </svg>`;
+        }
+
+        // 根据ID显示学生详情
+        function showStudentDetailsById(id) {
+            const student = students.find(s => s.id === id);
+            if (student) {
+                showStudentDetails(student);
+            }
+        }
+
+        // 显示学生详情
+        function showStudentDetails(student) {
+            const modal = document.getElementById('studentModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = `${student.name} - 个人详情`;
+            
+            // 查找学生的提交记录
+            const submission = submissions.find(s => s.studentId === student.id);
+            
+            let booksHtml = '';
+            
+            if (submission && submission.selectedBookIds && submission.selectedBookIds.length > 0) {
+                const bookTitles = submission.selectedBookIds.map(id => getBookTitleById(id));
+                booksHtml = `
+                    <div style="margin-top: 15px;">
+                        <h4>选择书籍 (${bookTitles.length}本)</h4>
+                        <div class="chips">
+                            ${bookTitles.map(title => `<span class="chip">📚 ${title}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (submission && submission.interests) {
+                booksHtml = `
+                    <div style="margin-top: 15px;">
+                        <h4>兴趣标签</h4>
+                        <div class="chips">
+                            ${submission.interests.map(interest => `<span class="chip">${interest}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                booksHtml = '<div style="margin-top: 15px; color: #666;">该学生尚未提交书籍选择</div>';
+            }
+            
+            modalBody.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <h4>基本信息</h4>
+                    <p><strong>姓名:</strong> ${student.name}</p>
+                    <p><strong>学号:</strong> ${student.id}</p>
+                    <p><strong>座位:</strong> ${student.seat}</p>
+                    <p><strong>任务进度:</strong> ${student.progress || 0}%</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${student.progress || 0}%;"></div>
+                    </div>
+                </div>
+                ${booksHtml}
+            `;
+            
+            modal.classList.add('show');
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            const modal = document.getElementById('studentModal');
+            modal.classList.remove('show');
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('studentModal');
+            if (event.target == modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        // 初始化
+        const TEACHER_PASSWORD = "teacher123";
+
+        function checkTeacherPassword() {
+            const input = document.getElementById("teacherPassword").value;
+            const errorDiv = document.getElementById("loginError");
+            
+            if (input === TEACHER_PASSWORD) {
+                localStorage.setItem("teacherLoggedIn", "true");
+                document.getElementById("teacherLogin").style.display = "none";
+                document.getElementById("teacherContent").style.display = "block";
+                init();
+            } else {
+                errorDiv.style.display = "block";
+            }
+        }
+
+        if (localStorage.getItem("teacherLoggedIn") === "true") {
+            document.getElementById("teacherLogin").style.display = "none";
+            document.getElementById("teacherContent").style.display = "block";
+            init();
+        }
+    </script>
+    </div>
+</body>
+</html>
